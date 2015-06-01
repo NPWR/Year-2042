@@ -14,7 +14,7 @@ FILLCOLOR = (0,0,0) #Bckground color
 
 DRAG = 0.9
 
-CM = 5. #Player acceleration in pxl/frame
+CM = 7.5 #Player acceleration in pxl/frame
 
 BULLET_SPEED = 20. #Bullet Speed in pxl/frame
 BULLET_LS = 180 #Bullet lifespan in frames

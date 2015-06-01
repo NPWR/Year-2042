@@ -162,7 +162,7 @@ class Spaceship:
         self.levelCoolDown = 10
         self.coolDownTime = 0
 
-        self.rocketParticles = ParticleSystem((120,50,255),50,3,2,2,5)
+        self.rocketParticles = ParticleSystem((50,100,255),25,5,3,2,5)
 
         self.shootAng = 0.
 
@@ -213,8 +213,8 @@ class Spaceship:
         self.coolDown()
 
         mang = atan2(self.dy,self.dx)
-        pmx = cos(mang)* 10
-        pmy = sin(mang)* 10
+        pmx = cos(mang)* 30
+        pmy = sin(mang)* 30
         self.rocketParticles.actuate(self.pos,[self.dx,self.dy],[pmx,pmy],PI/4)
 
     def actPos(self):
@@ -224,9 +224,6 @@ class Spaceship:
         self.rocketParticles.draw(SF,camPos)
         
         pos = [self.pos[0]-camPos[0],self.pos[1]-camPos[1]]
-        
-        pg.draw.circle(SF,self.c1,pos,10)
-        pg.gfxdraw.aacircle(SF,pos[0],pos[1],10,self.c)
 
         ang1 = self.ang + PI/4.
         ang2 = self.ang - PI/4.
@@ -235,6 +232,9 @@ class Spaceship:
 
         pg.gfxdraw.aacircle(SF,p1[0],p1[1],4,self.c)
         pg.gfxdraw.aacircle(SF,p2[0],p2[1],4,self.c)
+        
+        pg.draw.circle(SF,self.c1,pos,10)
+        pg.gfxdraw.aacircle(SF,pos[0],pos[1],10,self.c)
 
         for bullet in self.bullets:
             bullet.draw(SF,camPos)
@@ -324,8 +324,8 @@ class ParticleSystem:
         for i,particle in enumerate(self.particles):
             particle["Px"] += particle["Dx"]
             particle["Py"] += particle["Dy"]
-            particle["Dx"] *= DRAG
-            particle["Dy"] *= DRAG
+            #particle["Dx"] *= DRAG
+            #particle["Dy"] *= DRAG
             particle["AGE"] += 1
 
             rnd = randrange(-self.lifespanVariation,self.lifespanVariation)
@@ -356,7 +356,7 @@ class ParticleSystem:
                 angleDev = radians(angleDev)
 
                 oAngle = atan2(pmov[1],pmov[0]) + PI
-                spd = hypot(pmov[0],pmov[1])
+                spd = hypot(pmov[0],pmov[1]) * (randrange(50,100)/100.)
                 nAngle = oAngle + angleDev
 
                 dx = cos(nAngle) * spd
@@ -365,11 +365,7 @@ class ParticleSystem:
                 newP["Px"] = opos[0]
                 newP["Py"] = opos[1]
                 newP["Dx"] = omov[0] + dx
-                rndmod = randrange(90,120)/100.
-                newP["Dx"] *= rndmod
                 newP["Dy"] = omov[1] + dy
-                rndmod = randrange(90,120)/100.
-                newP["Dy"] *= rndmod
                 newP["AGE"] = 0
                 newP["COLOR"] = verifyColor((r,g,b))
                 newP["SIZE"] = randrange(self.minSize,self.maxSize)
