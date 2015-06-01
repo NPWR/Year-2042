@@ -5,7 +5,7 @@ if FULLSCREEN:
 else:
     WIN = pg.display.set_mode(WINSIZE)
 
-WORLD = Scene()
+WORLD = Scene(5,5)
 
 while 1:
     WIN.fill(FILLCOLOR)
@@ -27,6 +27,7 @@ while 1:
     WORLD.player.move()
     WORLD.followPlayer()
     WORLD.move()
+    WORLD.player.rocketParticles.stop()
     WORLD.draw(WIN)
     pg.display.flip()
 
