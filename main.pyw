@@ -11,18 +11,20 @@ while 1:
     WIN.fill(FILLCOLOR)
     
     for event in pg.event.get():
-        handleEvent(event)
+        handleEvent(WORLD,event)
 
     if KEY_ON["DOWN"]:
-        WORLD.player.addMov([0.,CM])
+        WORLD.player.normalMove([0.,CM])
     if KEY_ON["UP"]:
-        WORLD.player.addMov([0.,-CM])
+        WORLD.player.normalMove([0.,-CM])
     if KEY_ON["LEFT"]:
-        WORLD.player.addMov([-CM,0.])
+        WORLD.player.normalMove([-CM,0.])
     if KEY_ON["RIGHT"]:
-        WORLD.player.addMov([CM,0.])
-    if KEY_ON["SPACE"] or KEY_ON["LCLICK"]:
+        WORLD.player.normalMove([CM,0.])
+    if KEY_ON["LCLICK"]:
         WORLD.player.shoot()
+    if KEY_ON["SPACE"]:
+        pass
 
     WORLD.player.move()
     WORLD.followPlayer()

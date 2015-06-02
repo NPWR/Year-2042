@@ -29,7 +29,7 @@ def verifyColor(color):
 
     return (r,g,b)
 
-def handleEvent(event):
+def handleEvent(WORLD,event):
     if event.type == QUIT:
             pg.quit()
             sys.exit()
@@ -52,6 +52,8 @@ def handleEvent(event):
             
         if event.key == K_SPACE:
             KEY_ON["SPACE"] = True
+            WORLD.player.boost()
+            
 
     if event.type == MOUSEBUTTONDOWN:
         if pg.mouse.get_pressed()[0]:
@@ -162,15 +164,25 @@ class Spaceship:
         self.levelCoolDown = 10
         self.coolDownTime = 0
 
-        self.rocketParticles = ParticleSystem((50,100,255),25,5,3,2,5)
-
+        self.rocketParticles = ParticleSystem(ROCKET_COLOR,ROCKET_COLOR_VAR,ROCKET_LS,ROCKET_LS_VAR,ROCKET_MINSIZE,ROCKET_MAXSIZE)
+        self.boosterParticles = ParticleSystem(BOOSTER_COLOR,ROCKET_COLOR_VAR,BOOSTER_LS,ROCKET_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
+        self.boosterParticles.setDrag(DRAG)
+        
         self.shootAng = 0.
+
+    def boost(self):
+        self.addMov([self.dx*2.,self.dy*2.])
+        self.boosterParticles.start(50,1)
+
+    def normalMove(self,vec):
+        self.addMov(vec)
+        self.rocketParticles.start(ROCKET_FLUX)
 
     def addMov(self,vec):
         self.dx += vec[0]
         self.dy += vec[1]
 
-        self.rocketParticles.start(10)
+        
 
     def redefAngle(self):
         dx = self.dx
@@ -215,13 +227,15 @@ class Spaceship:
         mang = atan2(self.dy,self.dx)
         pmx = cos(mang)* 30
         pmy = sin(mang)* 30
-        self.rocketParticles.actuate(self.pos,[self.dx,self.dy],[pmx,pmy],PI/4)
+        self.rocketParticles.actuate(self.pos,[self.dx,self.dy],[pmx,pmy],ROCKET_SPREAD)
+        self.boosterParticles.actuate(self.pos,[self.dx,self.dy],[pmx*2,pmy*2],BOOSTER_SPREAD)
 
     def actPos(self):
         self.pos = (int(self.vpos[0]),int(self.vpos[1]))
 
     def draw(self,SF,camPos):
         self.rocketParticles.draw(SF,camPos)
+        self.boosterParticles.draw(SF,camPos)
         
         pos = [self.pos[0]-camPos[0],self.pos[1]-camPos[1]]
 
@@ -295,12 +309,18 @@ class ParticleSystem:
          "Dy":dy,
          "AGE":age,
          "COLOR":(r,g,b),
-         "SIZE":s}
+         "SIZE":s,
+         "BSIZE":s}
         """
 
         self.time = 0
         self.stopTime = 0
         self.spawnRate = 0
+
+        self.DRAG = 1.0
+
+    def setDrag(self,drag):
+        self.DRAG = drag
         
     def start(self,flux,stop = None):
         if not self.active:
@@ -324,9 +344,10 @@ class ParticleSystem:
         for i,particle in enumerate(self.particles):
             particle["Px"] += particle["Dx"]
             particle["Py"] += particle["Dy"]
-            #particle["Dx"] *= DRAG
-            #particle["Dy"] *= DRAG
+            particle["Dx"] *= self.DRAG
+            particle["Dy"] *= self.DRAG
             particle["AGE"] += 1
+            particle["SIZE"] = int((float(particle["BSIZE"])/float(self.baseLifespan))*(float(self.baseLifespan)-float(particle["AGE"])))
 
             rnd = randrange(-self.lifespanVariation,self.lifespanVariation)
             if particle["AGE"] > self.baseLifespan + rnd:
@@ -341,7 +362,6 @@ class ParticleSystem:
             if self.stopTime != 0:
                 if self.time >= self.stopTime:
                     self.stop()
-                    return 0
 
             #Spawn new particles
             for particle in range(self.spawnRate):
@@ -369,8 +389,11 @@ class ParticleSystem:
                 newP["AGE"] = 0
                 newP["COLOR"] = verifyColor((r,g,b))
                 newP["SIZE"] = randrange(self.minSize,self.maxSize)
+                newP["BSIZE"] = newP["SIZE"]
 
                 self.particles.append(newP)
+
+        self.time += 1
 
     def draw(self,SF,cP):
         for p in self.particles:
