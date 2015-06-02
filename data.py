@@ -145,8 +145,11 @@ class Bullet:
 
     def draw(self,SF,camPos):
         pos = (self.pos[0]-camPos[0],self.pos[1]-camPos[1])
-        
-        pg.gfxdraw.aacircle(SF,pos[0],pos[1],4,self.c)
+
+        try:
+            pg.gfxdraw.aacircle(SF,pos[0],pos[1],4,self.c)
+        except:
+            pass
         
         
 
@@ -165,13 +168,16 @@ class Spaceship:
         self.coolDownTime = 0
 
         self.rocketParticles = ParticleSystem(ROCKET_COLOR,ROCKET_COLOR_VAR,ROCKET_LS,ROCKET_LS_VAR,ROCKET_MINSIZE,ROCKET_MAXSIZE)
-        self.boosterParticles = ParticleSystem(BOOSTER_COLOR,ROCKET_COLOR_VAR,BOOSTER_LS,ROCKET_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
+        self.boosterParticles = ParticleSystem(BOOSTER_COLOR,BOOSTER_COLOR_VAR,BOOSTER_LS,ROCKET_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
         self.boosterParticles.setDrag(DRAG)
+        self.rocketParticles.setDrag(DRAG)
         
         self.shootAng = 0.
 
     def boost(self):
-        self.addMov([self.dx*2.,self.dy*2.])
+        x = cos(self.ang + PI) * BOOST_SPEED
+        y = sin(self.ang + PI) * BOOST_SPEED
+        self.addMov([x,y])
         self.boosterParticles.start(50,1)
 
     def normalMove(self,vec):
@@ -234,11 +240,14 @@ class Spaceship:
         self.pos = (int(self.vpos[0]),int(self.vpos[1]))
 
     def draw(self,SF,camPos):
+        #Particles drawing
         self.rocketParticles.draw(SF,camPos)
         self.boosterParticles.draw(SF,camPos)
         
+        #Calculating screen pos
         pos = [self.pos[0]-camPos[0],self.pos[1]-camPos[1]]
 
+        #Ship Drawing
         ang1 = self.ang + PI/4.
         ang2 = self.ang - PI/4.
         p1 = (int(pos[0] + cos(ang1)*10), int(pos[1] + sin(ang1)*10))
@@ -249,6 +258,13 @@ class Spaceship:
         
         pg.draw.circle(SF,self.c1,pos,10)
         pg.gfxdraw.aacircle(SF,pos[0],pos[1],10,self.c)
+
+        #Gun Drawing
+        Ang = self.shootAng + PI
+        sx, sy = int(cos(Ang)*4 + pos[0]) , int(sin(Ang)*4 + pos[1])
+        ex, ey = int(cos(Ang)*8 + pos[0]) , int(sin(Ang)*8 + pos[1])
+        pg.draw.aaline(SF,ROCKET_COLOR,(sx,sy),(ex,ey))
+        pg.gfxdraw.aacircle(SF,pos[0],pos[1],4,ROCKET_COLOR)
 
         for bullet in self.bullets:
             bullet.draw(SF,camPos)
