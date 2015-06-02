@@ -103,7 +103,7 @@ class Background:
             c = (c,c,c)
             
             for star in plane:
-                dmod = (i+2)*(i+2)
+                dmod = (i+1)*(i+1)
                 pos = [star[0]-camPos[0]/dmod,star[1]-camPos[1]/dmod]
 
                 if pos[0]<0:
@@ -168,7 +168,7 @@ class Spaceship:
         self.coolDownTime = 0
 
         self.rocketParticles = ParticleSystem(ROCKET_COLOR,ROCKET_COLOR_VAR,ROCKET_LS,ROCKET_LS_VAR,ROCKET_MINSIZE,ROCKET_MAXSIZE)
-        self.boosterParticles = ParticleSystem(BOOSTER_COLOR,BOOSTER_COLOR_VAR,BOOSTER_LS,ROCKET_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
+        self.boosterParticles = ParticleSystem(BOOSTER_COLOR,BOOSTER_COLOR_VAR,BOOSTER_LS,BOOSTER_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
         self.boosterParticles.setDrag(DRAG)
         self.rocketParticles.setDrag(DRAG)
         
@@ -364,7 +364,8 @@ class ParticleSystem:
             particle["Dy"] *= self.DRAG
             particle["AGE"] += 1
             particle["SIZE"] = int((float(particle["BSIZE"])/float(self.baseLifespan))*(float(self.baseLifespan)-float(particle["AGE"])))
-
+            if particle["SIZE"] < 1:
+                particle["SIZE"] = 1
             rnd = randrange(-self.lifespanVariation,self.lifespanVariation)
             if particle["AGE"] > self.baseLifespan + rnd:
                 toDel.append(i)

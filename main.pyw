@@ -5,7 +5,7 @@ if FULLSCREEN:
 else:
     WIN = pg.display.set_mode(WINSIZE)
 
-WORLD = Scene(5,5)
+WORLD = Scene(10,5)
 
 while 1:
     WIN.fill(FILLCOLOR)
