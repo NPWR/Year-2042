@@ -189,7 +189,7 @@ class Spaceship:
 
         self.rocketParticles = ParticleSystem(ROCKET_COLOR,ROCKET_COLOR_VAR,ROCKET_LS,ROCKET_LS_VAR,ROCKET_MINSIZE,ROCKET_MAXSIZE)
         self.boosterParticles = ParticleSystem(BOOSTER_COLOR,BOOSTER_COLOR_VAR,BOOSTER_LS,BOOSTER_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
-        self.boosterParticles.setDrag(DRAG)
+        self.boosterParticles.setDrag(1.0)
         self.rocketParticles.setDrag(DRAG)
         
         self.shootAng = 0.
