@@ -34,6 +34,8 @@ KEY_ON = {
     "LCLICK":False,
     "RCLICK":False}
 
+FUEL_PER_CELL = 5
+
 ROCKET_COLOR = (0,120,255)
 ROCKET_COLOR_VAR = 25
 ROCKET_LS = 10
@@ -45,11 +47,28 @@ ROCKET_FLUX = 10
 
 BOOST_SPEED = 40.
 
-BOOSTER_COLOR = (255,100,50)
+BOOSTER_COLOR = (255,50,50)
 BOOSTER_COLOR_VAR = 25
-BOOSTER_LS = 15
-BOOSTER_LS_VAR = 14
+BOOSTER_LS = 11
+BOOSTER_LS_VAR = 10
 BOOSTER_MINSIZE = 5
 BOOSTER_MAXSIZE = 6
 BOOSTER_SPREAD = pi/10.
+BOOSTER_FLUX = 50
+
+FUEL_SIZE = 4
+FUEL_COLOR = (0,255,0)
+
+AROUND = [[0,0],
+          [1,0],
+          [1,1],
+          [0,1],
+          [-1,1],
+          [-1,0],
+          [-1,-1],
+          [0,-1],
+          [1,-1]]
+
+def MOVE(cell,vec):
+    return [cell[0]+vec[0],cell[1]+vec[1]]
 

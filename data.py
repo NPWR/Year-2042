@@ -7,6 +7,19 @@ from random import randrange
 import sys
 PI = pi
 
+def onScreen(pos):
+    ret = True
+    if pos[0] < 0:
+        ret = False
+    elif pos[0] >= W:
+        ret = False
+    if pos[1] < 0:
+        ret = False
+    elif pos[1] >= H:
+        ret = False
+
+    return ret
+
 def verifyColor(color):
     r = color[0]
     g = color[1]
@@ -194,6 +207,8 @@ class Spaceship:
         
         self.shootAng = 0.
 
+        self.growth = 1.0
+
     def followMouse(self):
         x = cos(self.shootAng + PI) * CM
         y = sin(self.shootAng + PI) * CM
@@ -204,7 +219,7 @@ class Spaceship:
         x = cos(self.ang + PI) * BOOST_SPEED
         y = sin(self.ang + PI) * BOOST_SPEED
         self.addMov([x,y])
-        self.boosterParticles.start(50,1)
+        self.boosterParticles.start(BOOSTER_FLUX,1)
 
     def normalMove(self,vec):
         self.addMov(vec)
@@ -276,21 +291,25 @@ class Spaceship:
         #Ship Drawing
         ang1 = self.ang + PI/4.
         ang2 = self.ang - PI/4.
-        p1 = (int(pos[0] + cos(ang1)*10), int(pos[1] + sin(ang1)*10))
-        p2 = (int(pos[0] + cos(ang2)*10), int(pos[1] + sin(ang2)*10))
-
-        pg.gfxdraw.aacircle(SF,p1[0],p1[1],4,self.c)
-        pg.gfxdraw.aacircle(SF,p2[0],p2[1],4,self.c)
         
-        pg.draw.circle(SF,self.c1,pos,10)
-        pg.gfxdraw.aacircle(SF,pos[0],pos[1],10,self.c)
+        bodySize = int(10*self.growth)
+        rearSize = int(4*self.growth)
+        
+        p1 = (int(pos[0] + cos(ang1)*bodySize), int(pos[1] + sin(ang1)*bodySize))
+        p2 = (int(pos[0] + cos(ang2)*bodySize), int(pos[1] + sin(ang2)*bodySize))
+
+        pg.gfxdraw.aacircle(SF,p1[0],p1[1],rearSize,self.c)
+        pg.gfxdraw.aacircle(SF,p2[0],p2[1],rearSize,self.c)
+        
+        pg.draw.circle(SF,self.c1,pos,bodySize)
+        pg.gfxdraw.aacircle(SF,pos[0],pos[1],bodySize,self.c)
 
         #Gun Drawing
         Ang = self.shootAng + PI
-        sx, sy = int(cos(Ang)*4 + pos[0]) , int(sin(Ang)*4 + pos[1])
-        ex, ey = int(cos(Ang)*8 + pos[0]) , int(sin(Ang)*8 + pos[1])
+        sx, sy = int(cos(Ang)*4 + pos[0]) , int(sin(Ang)*rearSize + pos[1])
+        ex, ey = int(cos(Ang)*8 + pos[0]) , int(sin(Ang)*rearSize*2 + pos[1])
         pg.draw.aaline(SF,ROCKET_COLOR,(sx,sy),(ex,ey))
-        pg.gfxdraw.aacircle(SF,pos[0],pos[1],4,ROCKET_COLOR)
+        pg.gfxdraw.aacircle(SF,pos[0],pos[1],rearSize,ROCKET_COLOR)
 
         for bullet in self.bullets:
             bullet.draw(SF,camPos)
@@ -307,16 +326,54 @@ class Scene:
         self.background = Background(BgDensity,BgDepth)
         self.player = Spaceship(self.pos)
 
+        self.playerCell = [0,0]
+        self.cellStackTest = {}
+        self.cellStack = {}
+        self.genFuel()
+
+        self.previousCell = [0,0]
+
     def addMov(self,vec):
         self.dx += vec[0]
         self.dy += vec[1]
 
+    def genFuel(self):
+        for nb in AROUND:
+            cell = MOVE(self.playerCell,nb)
+            key = str(cell[0])+":"+str(cell[1])
+            been = False
+            try:
+                been = self.cellStackTest[key]
+            except:
+                been = False
+
+            if not been:
+                fuel = []
+                for i in range(FUEL_PER_CELL):
+                    x = randrange(W)
+                    y = randrange(H)
+                    fuel.append([x,y])
+                self.cellStack[key] = fuel
+                self.cellStackTest[key] = True
+                
+
+    def redefCell(self):
+        x = int(floor(self.player.pos[0] / W))
+        y = int(floor(self.player.pos[1] / H))
+
+        self.playerCell = [x,y]
+
+        if self.playerCell != self.previousCell:
+            self.previousCell = self.playerCell
+            self.genFuel()
+    
     def move(self):
         self.vpos[0] += self.dx
         self.vpos[1] += self.dy
         self.dx *= DRAG
         self.dy *= DRAG
         self.actPos()
+        self.redefCell()
 
     def followPlayer(self):
         self.vpos[0] = self.player.vpos[0] - CNTR[0]
@@ -325,8 +382,22 @@ class Scene:
     def actPos(self):
         self.pos = (int(self.vpos[0]),int(self.vpos[1]))
 
+    def drawFuel(self,SF,cp):
+        for nb in AROUND:
+            cell = MOVE(self.playerCell,nb)
+            key = str(cell[0])+":"+str(cell[1])
+            for fp in self.cellStack[key]:
+                dx = cell[0] * W
+                dy = cell[1] * H
+                pos = (int((fp[0]+ dx)-cp[0]),int((fp[1]+dy)-cp[1]))
+                if onScreen(pos):
+                    pg.draw.circle(SF,(0,0,0),pos,FUEL_SIZE)
+                    pg.gfxdraw.aacircle(SF,pos[0],pos[1],FUEL_SIZE,FUEL_COLOR)
+        
+
     def draw(self,SF):
         self.background.draw(SF,self.pos)
+        self.drawFuel(SF,self.pos)
         self.player.draw(SF,self.pos)
 
 
