@@ -29,7 +29,20 @@ def verifyColor(color):
 
     return (r,g,b)
 
-def handleEvent(WORLD,event):
+
+def handleEvent(WORLD,event,M_MASK):
+    mb = pg.mouse.get_pressed()
+    N_MASK = 0
+    if mb[0]:
+        N_MASK += M_L
+    if mb[1]:
+        N_MASK += M_M
+    if mb[2]:
+        N_MASK += M_R
+
+    D_MASK = -(N_MASK - M_MASK)
+    M_MASK = N_MASK
+    
     if event.type == QUIT:
             pg.quit()
             sys.exit()
@@ -53,11 +66,18 @@ def handleEvent(WORLD,event):
         if event.key == K_SPACE:
             KEY_ON["SPACE"] = True
             WORLD.player.boost()
-            
 
     if event.type == MOUSEBUTTONDOWN:
         if pg.mouse.get_pressed()[0]:
             KEY_ON["LCLICK"] = True
+        if pg.mouse.get_pressed()[2]:
+            KEY_ON["RCLICK"] = True
+    
+    else:
+        if D_MASK & M_R:
+            KEY_ON["RCLICK"] = False
+        if D_MASK & M_L:
+            KEY_ON["LCLICK"] = False
             
 
     if event.type == KEYUP:
@@ -76,8 +96,8 @@ def handleEvent(WORLD,event):
         if event.key == K_SPACE:
             KEY_ON["SPACE"] = False
             
-    if event.type == MOUSEBUTTONUP:
-        KEY_ON["LCLICK"] = False
+    return M_MASK
+        
 
 
 
@@ -173,6 +193,12 @@ class Spaceship:
         self.rocketParticles.setDrag(DRAG)
         
         self.shootAng = 0.
+
+    def followMouse(self):
+        x = cos(self.shootAng + PI) * CM
+        y = sin(self.shootAng + PI) * CM
+
+        self.normalMove([x,y])
 
     def boost(self):
         x = cos(self.ang + PI) * BOOST_SPEED
