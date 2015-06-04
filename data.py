@@ -209,11 +209,17 @@ class Spaceship:
 
         self.growth = 1.0
 
+        self.bodySize = int(10*self.growth)
+        self.rearSize = int(4*self.growth)
+
     def followMouse(self):
         x = cos(self.shootAng + PI) * CM
         y = sin(self.shootAng + PI) * CM
 
         self.normalMove([x,y])
+
+    def addFuel(self):
+        pass
 
     def boost(self):
         x = cos(self.ang + PI) * BOOST_SPEED
@@ -294,6 +300,8 @@ class Spaceship:
         
         bodySize = int(10*self.growth)
         rearSize = int(4*self.growth)
+        self.bodySize = bodySize
+        self.rearSize = rearSize
         
         p1 = (int(pos[0] + cos(ang1)*bodySize), int(pos[1] + sin(ang1)*bodySize))
         p2 = (int(pos[0] + cos(ang2)*bodySize), int(pos[1] + sin(ang2)*bodySize))
@@ -338,6 +346,13 @@ class Scene:
         self.dy += vec[1]
 
     def genFuel(self):
+        """
+        Using dict for fuel cell notation:
+        fuel = {"x":x,
+                "y":y,
+                "dx":dx,
+                "dy":dy}
+        """
         for nb in AROUND:
             cell = MOVE(self.playerCell,nb)
             key = str(cell[0])+":"+str(cell[1])
@@ -352,7 +367,8 @@ class Scene:
                 for i in range(FUEL_PER_CELL):
                     x = randrange(W)
                     y = randrange(H)
-                    fuel.append([x,y])
+                    c = {'x':x, 'y':y, 'dx':0., 'dy':0.}
+                    fuel.append(c)
                 self.cellStack[key] = fuel
                 self.cellStackTest[key] = True
                 
@@ -366,6 +382,43 @@ class Scene:
         if self.playerCell != self.previousCell:
             self.previousCell = self.playerCell
             self.genFuel()
+
+    def moveFuelCells(self):
+        for nb in AROUND:
+            cell = MOVE(self.playerCell, nb)
+            key = str(cell[0])+':'+str(cell[1])
+            for fuel in self.cellStack[key]:
+                fuel['x'] += fuel['dx']
+                fuel['y'] += fuel['dy']
+                fuel['dx'] *= DRAG
+                fuel['dy'] *= DRAG
+    
+
+    def checkFuelCellsAttraction(self):
+        for nb in AROUND:
+            cell = MOVE(self.playerCell,nb)
+            key = str(cell[0])+':'+str(cell[1])
+
+            for i,fuel in enumerate(self.cellStack[key]):
+                x = (cell[0] * W + fuel['x']) - self.pos[0]
+                y = (cell[1] * H + fuel['y']) - self.pos[1]
+
+                if onScreen((x,y)):
+                    dx = x - CNTR[0]
+                    dy = y - CNTR[1]
+                    d = hypot(dx,dy)
+
+                    if d <= FUEL_MAGNET_RANGE:
+                        g = FUEL_MAGNET_STRENGHT/(d)
+                        ang = atan2(dy,dx) + PI
+                        x = cos(ang)*g
+                        y = sin(ang)*g
+                        fuel['dx'] += x
+                        fuel['dy'] += y
+
+                    if d <= self.player.bodySize*2:
+                        self.player.addFuel()
+                        self.cellStack[key].pop(i)
     
     def move(self):
         self.vpos[0] += self.dx
@@ -374,6 +427,8 @@ class Scene:
         self.dy *= DRAG
         self.actPos()
         self.redefCell()
+        self.checkFuelCellsAttraction()
+        self.moveFuelCells()
 
     def followPlayer(self):
         self.vpos[0] = self.player.vpos[0] - CNTR[0]
@@ -389,10 +444,11 @@ class Scene:
             for fp in self.cellStack[key]:
                 dx = cell[0] * W
                 dy = cell[1] * H
-                pos = (int((fp[0]+ dx)-cp[0]),int((fp[1]+dy)-cp[1]))
+                pos = (int((fp['x']+ dx)-cp[0]),int((fp['y']+dy)-cp[1]))
                 if onScreen(pos):
                     pg.draw.circle(SF,(0,0,0),pos,FUEL_SIZE)
                     pg.gfxdraw.aacircle(SF,pos[0],pos[1],FUEL_SIZE,FUEL_COLOR)
+                    pg.gfxdraw.aacircle(SF,pos[0],pos[1],int(FUEL_SIZE/2.),FUEL_COLOR)
         
 
     def draw(self,SF):
