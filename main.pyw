@@ -17,13 +17,13 @@ while 1:
         M_MASK = handleEvent(WORLD,event, M_MASK)
 
     if KEY_ON["DOWN"]:
-        WORLD.player.normalMove([0.,CM])
+        WORLD.player.normalMove(PI/2.,CM)
     if KEY_ON["UP"]:
-        WORLD.player.normalMove([0.,-CM])
+        WORLD.player.normalMove(-PI/2.,CM)
     if KEY_ON["LEFT"]:
-        WORLD.player.normalMove([-CM,0.])
+        WORLD.player.normalMove(PI,CM)
     if KEY_ON["RIGHT"]:
-        WORLD.player.normalMove([CM,0.])
+        WORLD.player.normalMove(0,CM)
     if KEY_ON["LCLICK"]:
         WORLD.player.shoot()
     if KEY_ON["SPACE"]:

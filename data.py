@@ -213,10 +213,7 @@ class Spaceship:
         self.rearSize = int(4*self.growth)
 
     def followMouse(self):
-        x = cos(self.shootAng + PI) * CM
-        y = sin(self.shootAng + PI) * CM
-
-        self.normalMove([x,y])
+        self.normalMove(self.shootAng + PI,CM)
 
     def addFuel(self):
         pass
@@ -227,7 +224,10 @@ class Spaceship:
         self.addMov([x,y])
         self.boosterParticles.start(BOOSTER_FLUX,1)
 
-    def normalMove(self,vec):
+    def normalMove(self,angle,speed):
+        x = cos(angle) * speed
+        y = sin(angle) * speed
+        vec = [x,y]
         self.addMov(vec)
         self.rocketParticles.start(ROCKET_FLUX)
 
