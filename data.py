@@ -148,7 +148,7 @@ class Background:
             newSF.blit(smlSF,(0,H))
             newSF.blit(smlSF,(W,H))
 
-            newSF.set_colorkey((0,0,0))
+            newSF.set_colorkey((0,0,0),pg.RLEACCEL)
 
             self.surfaces.append(newSF)
         self.surfaces.reverse()
