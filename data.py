@@ -195,6 +195,7 @@ class Spaceship:
         self.c1 = (0,0,0)
         self.ang = 0.
         self.bullets = []
+        self.fuel = START_FUEL
 
         self.readyToShoot = True
         self.levelCoolDown = 10
@@ -216,20 +217,24 @@ class Spaceship:
         self.normalMove(self.shootAng + PI,CM)
 
     def addFuel(self,UI):
-        pass
+        self.fuel += FUEL_VALUE
 
     def boost(self):
-        x = cos(self.ang + PI) * BOOST_SPEED
-        y = sin(self.ang + PI) * BOOST_SPEED
-        self.addMov([x,y])
-        self.boosterParticles.start(BOOSTER_FLUX,1)
+        if self.fuel >= 10:
+            x = cos(self.ang + PI) * BOOST_SPEED
+            y = sin(self.ang + PI) * BOOST_SPEED
+            self.addMov([x,y])
+            self.boosterParticles.start(BOOSTER_FLUX,1)
+            self.fuel -= 10
 
     def normalMove(self,angle,speed):
-        x = cos(angle) * speed
-        y = sin(angle) * speed
-        vec = [x,y]
-        self.addMov(vec)
-        self.rocketParticles.start(ROCKET_FLUX)
+        if self.fuel:
+            x = cos(angle) * speed
+            y = sin(angle) * speed
+            vec = [x,y]
+            self.addMov(vec)
+            self.rocketParticles.start(ROCKET_FLUX)
+            self.fuel -= 1
 
     def addMov(self,vec):
         self.dx += vec[0]
@@ -422,6 +427,9 @@ class Scene:
                         self.player.addFuel(self.UI['XP'])
                         self.cellStack[key].pop(i)
     
+    def refreshUI(self):
+        self.UI['FUEL'].setCount(self.player.fuel)
+
     def move(self):
         self.vpos[0] += self.dx
         self.vpos[1] += self.dy
@@ -431,6 +439,7 @@ class Scene:
         self.redefCell()
         self.checkFuelCellsAttraction()
         self.moveFuelCells()
+        self.refreshUI()
 
     def addUI(self,key,ui):
         self.UI[key] = ui

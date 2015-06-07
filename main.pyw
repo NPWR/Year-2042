@@ -9,7 +9,7 @@ M_MASK = 0
 
 XP_Bar = ProgressBar(18,100,(255,255,255),"XP",100)
 XP_Bar.setProgress(0)
-FUEL_Bar = ProgressBar(18,100,(255,255,255),"FUEL",100)
+FUEL_Bar = ProgressBar(18,100,(255,255,255),"FUEL",START_FUEL)
 
 WORLD.addUI('XP',XP_Bar)
 WORLD.addUI('FUEL',FUEL_Bar)
