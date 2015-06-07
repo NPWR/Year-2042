@@ -129,29 +129,40 @@ class Background:
                 self.planes[i].append(star)
         self.planes.reverse()
 
-    def draw(self,SF,camPos):
+        self.surfaces = []
         for j,plane in enumerate(self.planes):
+            
             i = (self.depth-1)-j
             c = int((255/self.depth) * (self.depth - i))         
             c = (c,c,c)
             
+            newSF = pg.Surface((W*2,H*2))
+            smlSF = pg.Surface((W,H))
+            
             for star in plane:
-                dmod = (i+1)*(i+1)
-                pos = [star[0]-camPos[0]/dmod,star[1]-camPos[1]/dmod]
+                pg.draw.circle(smlSF,c,star,2)
+                pg.gfxdraw.aacircle(smlSF,star[0],star[1],2,c)
 
-                if pos[0]<0:
-                    pos[0] = W - abs(pos[0]) % W
-                if pos[0]>W:
-                    pos[0] = 0 + abs(pos[0]) % W
-                if pos[1]<0:
-                    pos[1] = H - abs(pos[1]) % H
-                if pos[1]>H:
-                    pos[1] = 0 + abs(pos[1]) % H
+            newSF.blit(smlSF,(0,0))
+            newSF.blit(smlSF,(W,0))
+            newSF.blit(smlSF,(0,H))
+            newSF.blit(smlSF,(W,H))
 
-                pos = (pos[0],pos[1])
+            newSF.set_colorkey((0,0,0))
 
-                pg.gfxdraw.aacircle(SF,pos[0],pos[1],2,c)
-                pg.draw.circle(SF,c,pos,2)
+            self.surfaces.append(newSF)
+        self.surfaces.reverse()
+
+    def draw(self,SF,camPos):
+        for i,surface in enumerate(self.surfaces):
+            dmod = (i+1)*(i+1)
+            pos = (int(camPos[0]/dmod),int(camPos[1]/dmod))
+
+            x = pos[0] % W
+            y = pos[1] % H
+            rct = ((x,y),(W,H))
+
+            SF.blit(surface,(0,0),rct)
 
 class Bullet:
     def __init__(self,pos,ang,d):
