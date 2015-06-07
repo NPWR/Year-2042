@@ -14,6 +14,10 @@ class ProgressBar:
         self.count = maximum
         self.max = maximum
 
+    def setProgress(self,n):
+        self.progress = n
+        self.count = int(n*self.max/100.)
+
     def refreshProgress(self):
         self.progress = int(self.count*100/self.max)
 
@@ -29,22 +33,23 @@ class ProgressBar:
             self.count = self.maximum
         self.refreshProgress()
 
-    def draw(self,SF,corner):
+    def draw(self,SF,corner,order):
+        spc = 10
         if corner == 'ul':
-            tp = (UI_MARGIN +  UI_BAR_W, UI_MARGIN)
-            bp = (UI_MARGIN, UI_MARGIN)
+            tp = (UI_MARGIN +  UI_BAR_W + spc, UI_MARGIN + (order*(UI_BAR_H+spc)))
+            bp = (UI_MARGIN, UI_MARGIN + (order * (UI_BAR_H+spc)))
             
         if corner == 'ur':
-            tp = (W - UI_BAR_W - UI_MARGIN - self.sf.get_width(), UI_MARGIN)
-            bp = (W - UI_BAR_W - UI_MARGIN, UI_MARGIN)
+            tp = (W - UI_BAR_W - UI_MARGIN - self.sf.get_width() - spc, UI_MARGIN + (order*(UI_BAR_H+spc)))
+            bp = (W - UI_BAR_W - UI_MARGIN, UI_MARGIN + (order*(UI_BAR_H+spc)))
             
         if corner == 'bl':
-            tp = (UI_MARGIN + UI_BAR_W, H - UI_MARGIN)
-            bp = (UI_MARGIN, H - UI_MARGIN)
+            tp = (UI_MARGIN + UI_BAR_W, H - UI_MARGIN - (order*(UI_BAR_H+spc)))
+            bp = (UI_MARGIN, H - UI_MARGIN - (order*(UI_BAR_H+spc)))
             
         if corner == 'br':
-            tp = (W - UI_MARGIN - UI_BAR_W - self.sf.get_width(), H - UI_MARGIN)
-            bp = (W - UI_MARGIN - UI_BAR_W, H - UI_MARGIN)
+            tp = (W - UI_MARGIN - UI_BAR_W - self.sf.get_width(), H - UI_MARGIN - (order*(UI_BAR_H+spc)))
+            bp = (W - UI_MARGIN - UI_BAR_W, H - UI_MARGIN - (order*(UI_BAR_H+spc)))
 
         SF.blit(self.sf,tp)
 

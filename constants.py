@@ -65,6 +65,8 @@ FUEL_COLOR = (0,255,0)
 FUEL_MAGNET_RANGE = 150
 FUEL_MAGNET_STRENGHT = 200. #pxl/fr^2
 
+UI_POS = 'ur'
+
 AROUND = [[0,0],
           [1,0],
           [1,1],

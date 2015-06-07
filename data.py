@@ -215,7 +215,7 @@ class Spaceship:
     def followMouse(self):
         self.normalMove(self.shootAng + PI,CM)
 
-    def addFuel(self):
+    def addFuel(self,UI):
         pass
 
     def boost(self):
@@ -341,6 +341,8 @@ class Scene:
 
         self.previousCell = [0,0]
 
+        self.UI = {}
+
     def addMov(self,vec):
         self.dx += vec[0]
         self.dy += vec[1]
@@ -417,7 +419,7 @@ class Scene:
                         fuel['dy'] += y
 
                     if d <= self.player.bodySize*2:
-                        self.player.addFuel()
+                        self.player.addFuel(self.UI['XP'])
                         self.cellStack[key].pop(i)
     
     def move(self):
@@ -430,6 +432,9 @@ class Scene:
         self.checkFuelCellsAttraction()
         self.moveFuelCells()
 
+    def addUI(self,key,ui):
+        self.UI[key] = ui
+    
     def followPlayer(self):
         self.vpos[0] = self.player.vpos[0] - CNTR[0]
         self.vpos[1] = self.player.vpos[1] - CNTR[1]
@@ -449,12 +454,16 @@ class Scene:
                     pg.draw.circle(SF,(0,0,0),pos,FUEL_SIZE)
                     pg.gfxdraw.aacircle(SF,pos[0],pos[1],FUEL_SIZE,FUEL_COLOR)
                     pg.gfxdraw.aacircle(SF,pos[0],pos[1],int(FUEL_SIZE/2.),FUEL_COLOR)
-        
+
+    def drawUI(self,SF):
+        for i,key in enumerate(self.UI):
+            self.UI[key].draw(SF,UI_POS,i)
 
     def draw(self,SF):
         self.background.draw(SF,self.pos)
         self.drawFuel(SF,self.pos)
         self.player.draw(SF,self.pos)
+        self.drawUI(SF)
 
 
 class ParticleSystem:
