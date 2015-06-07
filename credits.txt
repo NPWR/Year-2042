@@ -1,0 +1,4 @@
+GNU License owner : Elliot (NPWR) Bitsch 2015
+See LICENSE File.
+
+hollowpoint.ttf Font from : 2014 Iconian Fonts - Daniel Zadorozny 
