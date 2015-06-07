@@ -1,11 +1,12 @@
 from math import pi
+from screenres import *
 
 #Mouse buttons binary masks:
 M_L, M_M, M_R = 1,2,4
 
 
-H = 768
-W = 1368
+#H = 768
+#W = 1368
 WINSIZE = (W,H)
 FULLSCREEN = True
 
