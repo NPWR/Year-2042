@@ -26,15 +26,6 @@ CM = 2.0 #Player acceleration in pxl/frame
 BULLET_SPEED = 20. #Bullet Speed in pxl/frame
 BULLET_LS = 180 #Bullet lifespan in frames
 
-KEY_ON = {
-    "UP":False,
-    "DOWN":False,
-    "LEFT":False,
-    "RIGHT":False,
-    "SPACE":False,
-    "LCLICK":False,
-    "RCLICK":False}
-
 FUEL_PER_CELL = 5
 
 UI_MARGIN = 20
@@ -73,16 +64,5 @@ MAX_FUEL_1 = 720
 
 MAX_HP_1 = 100
 
-AROUND = [[0,0],
-          [1,0],
-          [1,1],
-          [0,1],
-          [-1,1],
-          [-1,0],
-          [-1,-1],
-          [0,-1],
-          [1,-1]]
 
-def MOVE(cell,vec):
-    return [cell[0]+vec[0],cell[1]+vec[1]]
 
