@@ -206,7 +206,7 @@ class Spaceship:
         self.c1 = (0,0,0)
         self.ang = 0.
         self.bullets = []
-        self.fuel = START_FUEL
+        self.fuel = MAX_FUEL_1
 
         self.readyToShoot = True
         self.levelCoolDown = 10
@@ -220,6 +220,8 @@ class Spaceship:
         self.shootAng = 0.
 
         self.growth = 1.0
+
+        self.HP = MAX_HP_1
 
         self.bodySize = int(10*self.growth)
         self.rearSize = int(4*self.growth)
