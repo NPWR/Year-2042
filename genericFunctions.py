@@ -1,6 +1,7 @@
 import pygame as pg
 from pygame.locals import *
 from constants import *
+import sys
 
 AROUND = [[0,0],
           [1,0],

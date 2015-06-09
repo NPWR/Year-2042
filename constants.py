@@ -8,7 +8,6 @@ M_L, M_M, M_R = 1,2,4
 #H = 768
 #W = 1368
 WINSIZE = (W,H)
-FULLSCREEN = True
 
 CenterX = W/2
 CenterY = H/2

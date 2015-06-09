@@ -4,6 +4,7 @@ from pygame.locals import *
 from pygame import gfxdraw
 from math import *
 from random import randrange
+from rigidBody import *
 import sys
 PI = pi
 
@@ -56,48 +57,15 @@ class Background:
             rct = ((x,y),(W,H))
 
             SF.blit(surface,(0,0),rct)
-
-class Bullet:
-    def __init__(self,pos,ang,d):
-        self.ang = ang + PI
-        self.pos = pos
-        self.vpos = [float(pos[0]),float(pos[1])]
-        self.dx, self.dy =  cos(self.ang) * BULLET_SPEED + d[0], sin(self.ang) * BULLET_SPEED + d[1]
-        self.c = (255,255,255)
-        self.c1 = (0,0,0)
-        self.life = BULLET_LS
-
-    def addMov(self,vec):
-        self.dx += vec[0]
-        self.dy += vec[1]
-
-    def move(self):
-        self.vpos[0] += self.dx
-        self.vpos[1] += self.dy
-        self.actPos()
-        self.life -= 1
-
-    def actPos(self):
-        self.pos = (int(self.vpos[0]),int(self.vpos[1]))
-
-    def draw(self,SF,camPos):
-        pos = (self.pos[0]-camPos[0],self.pos[1]-camPos[1])
-
-        try:
-            pg.gfxdraw.aacircle(SF,pos[0],pos[1],4,self.c)
-        except:
-            pass
-        
         
 
-class Spaceship:
-    def __init__(self,pos):
-        self.pos = pos
-        self.vpos = [float(pos[0]),float(pos[1])]
-        self.dx, self.dy =  0.,0.
-        self.c = (255,255,255)
+class Spaceship(rigidBody):
+    def __init__(self,pos,d = [0.,0.]):
+        rigidBody.__init__(self,pos,d)
+
+        self.c  = (255,255,255)
         self.c1 = (0,0,0)
-        self.ang = 0.
+
         self.bullets = []
         self.fuel = MAX_FUEL_1
 
@@ -109,7 +77,7 @@ class Spaceship:
         self.boosterParticles = ParticleSystem(BOOSTER_COLOR,BOOSTER_COLOR_VAR,BOOSTER_LS,BOOSTER_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
         self.boosterParticles.setDrag(1.0)
         self.rocketParticles.setDrag(DRAG)
-        
+
         self.shootAng = 0.
 
         self.growth = 1.0
@@ -120,84 +88,79 @@ class Spaceship:
         self.rearSize = int(4*self.growth)
 
     def followMouse(self):
-        self.normalMove(self.shootAng + PI,CM)
+        self.normalMove(self.shootAng,CM)
 
-    def addFuel(self,UI):
+    def addFuel(self):
         self.fuel += FUEL_VALUE
+        if self.fuel > MAX_FUEL_1:
+            self.fuel = MAX_FUEL_1
 
     def boost(self):
         if self.fuel >= 10:
-            x = cos(self.ang + PI) * BOOST_SPEED
-            y = sin(self.ang + PI) * BOOST_SPEED
+            x = cos(self.ang) * BOOST_SPEED
+            y = sin(self.ang ) * BOOST_SPEED
             self.addMov([x,y])
             self.boosterParticles.start(BOOSTER_FLUX,1)
             self.fuel -= 10
 
-    def normalMove(self,angle,speed):
+    def normalMove(self,ang,spd):
         if self.fuel:
-            x = cos(angle) * speed
-            y = sin(angle) * speed
-            vec = [x,y]
-            self.addMov(vec)
+            x = cos(ang) * spd
+            y = sin(ang) * spd
+            self.addMov([x,y])
             self.rocketParticles.start(ROCKET_FLUX)
             self.fuel -= 1
 
-    def addMov(self,vec):
-        self.dx += vec[0]
-        self.dy += vec[1]
-
-        
-
-    def redefAngle(self):
-        dx = self.dx
-        dy = self.dy
-
-        ang = atan2(dy,dx) + PI
-        self.ang = ang
-
-        dx = pg.mouse.get_pos()[0] - CNTR[0]
-        dy = pg.mouse.get_pos()[1] - CNTR[1]
-
-        ang = atan2(dy,dx) + PI
-        self.shootAng = ang
+    def actAngle(self):
+        self.ang = atan2(self.d[1],self.d[0])
+        self.shootAng = atan2(pg.mouse.get_pos()[1] - CNTR[1], pg.mouse.get_pos()[0] - CNTR[0])
 
     def coolDown(self):
         if self.coolDownTime > 0 and not self.readyToShoot:
             self.coolDownTime -= 1
-
         else:
             self.readyToShoot = True
-    
+
     def shoot(self):
         if self.readyToShoot:
-            self.bullets.append(Bullet(self.pos,self.shootAng,[self.dx,self.dy]))
+            NB = {}
+            NB['POS'] = [self.pos[0],self.pos[1]]
+            x = cos(self.shootAng) * BULLET_SPEED + self.d[0]
+            y = sin(self.shootAng) * BULLET_SPEED + self.d[1]
+            NB['D'] = [x,y]
+            NB['AGE'] = 0
+            self.bullets.append(NB)
+
             self.readyToShoot = False
             self.coolDownTime = self.levelCoolDown
-    
-    def move(self):
-        self.vpos[0] += self.dx
-        self.vpos[1] += self.dy
-        self.dx *= DRAG
-        self.dy *= DRAG
-        self.actPos()
-        self.redefAngle()
-        for i,bullet in enumerate(self.bullets):
-            bullet.move()
-            if bullet.life  == 0:
+
+    def actuate(self):
+        self.move()
+        self.actAngle()
+        self.actBullets()
+        self.actParticles()
+
+    def actBullets(self):
+        for i,B in enumerate(self.bullets):
+            B['POS'][0] += B['D'][0]
+            B['POS'][1] += B['D'][1]
+            B['POS'][0] = int(B['POS'][0])
+            B['POS'][1] = int(B['POS'][1])
+            B['AGE'] += 1
+
+            if B['AGE'] > BULLET_LS:
                 self.bullets.pop(i)
 
         self.coolDown()
 
-        mang = atan2(self.dy,self.dx)
-        pmx = cos(mang)* 30
-        pmy = sin(mang)* 30
-        self.rocketParticles.actuate(self.pos,[self.dx,self.dy],[pmx,pmy],ROCKET_SPREAD)
-        self.boosterParticles.actuate(self.pos,[self.dx,self.dy],[pmx*2,pmy*2],BOOSTER_SPREAD)
+    def actParticles(self):
+        mang = atan2(self.d[1],self.d[0])
+        pmx = cos(mang)*30
+        pmy = sin(mang)*30
+        self.rocketParticles.actuate(self.pos,self.d,[pmx,pmy],ROCKET_SPREAD)
+        self.boosterParticles.actuate(self.pos,self.d,[pmx,pmy],BOOSTER_SPREAD)
 
-    def actPos(self):
-        self.pos = (int(self.vpos[0]),int(self.vpos[1]))
-
-    def draw(self,SF,camPos):
+    def draw(self, SF, camPos):
         #Particles drawing
         self.rocketParticles.draw(SF,camPos)
         self.boosterParticles.draw(SF,camPos)
@@ -206,8 +169,8 @@ class Spaceship:
         pos = [self.pos[0]-camPos[0],self.pos[1]-camPos[1]]
 
         #Ship Drawing
-        ang1 = self.ang + PI/4.
-        ang2 = self.ang - PI/4.
+        ang1 = self.ang + PI + PI/4.
+        ang2 = self.ang + PI - PI/4.
         
         bodySize = int(10*self.growth)
         rearSize = int(4*self.growth)
@@ -230,10 +193,10 @@ class Spaceship:
         pg.draw.aaline(SF,ROCKET_COLOR,(sx,sy),(ex,ey))
         pg.gfxdraw.aacircle(SF,pos[0],pos[1],rearSize,ROCKET_COLOR)
 
-        for bullet in self.bullets:
-            bullet.draw(SF,camPos)
-
-        
+        for B in self.bullets:
+            p = (B['POS'][0] - camPos[0], B['POS'][1] - camPos[1])
+            pg.draw.circle(SF,self.c1,p,4)
+            pg.gfxdraw.aacircle(SF,p[0],p[1],4,self.c)        
 
 
 class Scene:
@@ -330,7 +293,7 @@ class Scene:
                         fuel['dy'] += y
 
                     if d <= self.player.bodySize*2:
-                        self.player.addFuel(self.UI['XP'])
+                        self.player.addFuel()
                         self.cellStack[key].pop(i)
     
     def refreshUI(self):
