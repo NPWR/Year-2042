@@ -186,11 +186,6 @@ class Spaceship(rigidBody):
         pg.draw.circle(SF,self.c1,pos,bodySize)
         pg.gfxdraw.aacircle(SF,pos[0],pos[1],bodySize,self.c)
 
-        #Gun Drawing
-        Ang = self.shootAng + PI
-        sx, sy = int(cos(Ang)*4 + pos[0]) , int(sin(Ang)*rearSize + pos[1])
-        ex, ey = int(cos(Ang)*8 + pos[0]) , int(sin(Ang)*rearSize*2 + pos[1])
-        pg.draw.aaline(SF,ROCKET_COLOR,(sx,sy),(ex,ey))
         pg.gfxdraw.aacircle(SF,pos[0],pos[1],rearSize,ROCKET_COLOR)
 
         for B in self.bullets:
