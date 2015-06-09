@@ -1,6 +1,8 @@
 # Year-2042
 
 Dependencies :
+
+-Python 2.7
 -Pygame
 
 Survive and dominate your enemies with your new super spaceship.

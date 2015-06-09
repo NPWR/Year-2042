@@ -101,7 +101,7 @@ class Spaceship(rigidBody):
             y = sin(self.ang ) * BOOST_SPEED
             self.addMov([x,y])
             self.boosterParticles.start(BOOSTER_FLUX,1)
-            self.fuel -= 10
+            self.fuel -= BOOST_COST
 
     def normalMove(self,ang,spd):
         if self.fuel:
