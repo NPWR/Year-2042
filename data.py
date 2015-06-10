@@ -84,6 +84,8 @@ class Spaceship(rigidBody):
 
         self.HP = MAX_HP_1
 
+        self.XP = 0
+
         self.bodySize = int(10*self.growth)
         self.rearSize = int(4*self.growth)
 
@@ -94,6 +96,8 @@ class Spaceship(rigidBody):
         self.fuel += FUEL_VALUE
         if self.fuel > MAX_FUEL_1:
             self.fuel = MAX_FUEL_1
+
+        self.XP += 20
 
     def boost(self):
         if self.fuel >= 10:
@@ -211,6 +215,7 @@ class Scene:
         self.previousCell = [0,0]
 
         self.UI = {}
+        self.iUI = []
 
     def addMov(self,vec):
         self.dx += vec[0]
@@ -293,6 +298,7 @@ class Scene:
     
     def refreshUI(self):
         self.UI['FUEL'].setCount(self.player.fuel)
+        self.UI['XP'].setCount(self.player.XP)
 
     def move(self):
         self.vpos[0] += self.dx
@@ -305,8 +311,11 @@ class Scene:
         self.moveFuelCells()
         self.refreshUI()
 
-    def addUI(self,key,ui):
-        self.UI[key] = ui
+    def addUI(self,key,ui,independant = False):
+        if not independant:
+            self.UI[key] = ui
+        else:
+            self.iUI.append(ui)
     
     def followPlayer(self):
         self.vpos[0] = self.player.vpos[0] - CNTR[0]
@@ -331,6 +340,9 @@ class Scene:
     def drawUI(self,SF):
         for i,key in enumerate(self.UI):
             self.UI[key].draw(SF,UI_POS,i)
+
+        for ui in self.iUI:
+            ui.draw(SF)
 
     def draw(self,SF):
         self.background.draw(SF,self.pos)
