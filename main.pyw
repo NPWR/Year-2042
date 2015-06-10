@@ -2,8 +2,6 @@ from UI import *
 import gc
 gc.enable()
 
-WIN = pg.display.set_mode(WINSIZE,FULLSCREEN)
-
 WORLD = Scene(10,5)
 M_MASK = 0
 
@@ -11,10 +9,14 @@ XP_Bar = ProgressBar(18,100,(255,255,255),"XP",100)
 XP_Bar.setProgress(0)
 FUEL_Bar = ProgressBar(18,100,(255,255,255),"FUEL",MAX_FUEL_1)
 HP_Bar = ProgressBar(18,100,(255,255,255),"HP",MAX_HP_1)
+LVL_UP = UpgradeSelection(0)
 
 WORLD.addUI('HP',HP_Bar)
 WORLD.addUI('XP',XP_Bar)
 WORLD.addUI('FUEL',FUEL_Bar)
+WORLD.addUI('LVL_UP',LVL_UP,True)
+
+WIN = pg.display.set_mode(WINSIZE,FULLSCREEN)
 
 while 1:
     WIN.fill(FILLCOLOR)
@@ -37,7 +39,7 @@ while 1:
     if KEY_ON["RCLICK"]:
         WORLD.player.followMouse()
 
-    WORLD.player.move()
+    WORLD.player.actuate()
     WORLD.followPlayer()
     WORLD.move()
     WORLD.player.rocketParticles.stop()

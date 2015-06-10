@@ -1,118 +1,12 @@
-from constants import *
+from genericFunctions import *
 import pygame as pg
 from pygame.locals import *
 from pygame import gfxdraw
 from math import *
 from random import randrange
+from rigidBody import *
 import sys
 PI = pi
-
-def onScreen(pos):
-    ret = True
-    if pos[0] < 0:
-        ret = False
-    elif pos[0] >= W:
-        ret = False
-    if pos[1] < 0:
-        ret = False
-    elif pos[1] >= H:
-        ret = False
-
-    return ret
-
-def verifyColor(color):
-    r = color[0]
-    g = color[1]
-    b = color[2]
-
-    if r < 0:
-        r = 0
-    elif r > 255:
-        r = 255
-
-    if g < 0:
-        g = 0
-    elif r > 255:
-        g = 0
-
-    if b < 0:
-        b = 0
-    elif b > 255:
-        b = 255
-
-    return (r,g,b)
-
-
-def handleEvent(WORLD,event,M_MASK):
-    mb = pg.mouse.get_pressed()
-    N_MASK = 0
-    if mb[0]:
-        N_MASK += M_L
-    if mb[1]:
-        N_MASK += M_M
-    if mb[2]:
-        N_MASK += M_R
-
-    D_MASK = -(N_MASK - M_MASK)
-    M_MASK = N_MASK
-    
-    if event.type == QUIT:
-            pg.quit()
-            sys.exit()
-    if event.type == KEYDOWN:
-        if event.key == K_F4:
-            pg.quit()
-            sys.exit()
-            
-        if event.key == K_DOWN or event.key == K_s:
-            KEY_ON["DOWN"] = True
-
-        if event.key == K_UP or event.key == K_w:
-            KEY_ON["UP"] = True
-            
-        if event.key == K_LEFT or event.key == K_a:
-            KEY_ON["LEFT"] = True
-            
-        if event.key == K_RIGHT or event.key == K_d:
-            KEY_ON["RIGHT"] = True
-            
-        if event.key == K_SPACE:
-            KEY_ON["SPACE"] = True
-            WORLD.player.boost()
-
-    if event.type == MOUSEBUTTONDOWN:
-        if pg.mouse.get_pressed()[0]:
-            KEY_ON["LCLICK"] = True
-        if pg.mouse.get_pressed()[2]:
-            KEY_ON["RCLICK"] = True
-    
-    else:
-        if D_MASK & M_R:
-            KEY_ON["RCLICK"] = False
-        if D_MASK & M_L:
-            KEY_ON["LCLICK"] = False
-            
-
-    if event.type == KEYUP:
-        if event.key == K_DOWN or event.key == K_s:
-            KEY_ON["DOWN"] = False
-
-        if event.key == K_UP or event.key == K_w:
-            KEY_ON["UP"] = False
-
-        if event.key == K_LEFT or event.key == K_a:
-            KEY_ON["LEFT"] = False
-
-        if event.key == K_RIGHT or event.key == K_d:
-            KEY_ON["RIGHT"] = False
-
-        if event.key == K_SPACE:
-            KEY_ON["SPACE"] = False
-            
-    return M_MASK
-        
-
-
 
 class Background:
     def __init__(self,density,depth):
@@ -163,48 +57,15 @@ class Background:
             rct = ((x,y),(W,H))
 
             SF.blit(surface,(0,0),rct)
-
-class Bullet:
-    def __init__(self,pos,ang,d):
-        self.ang = ang + PI
-        self.pos = pos
-        self.vpos = [float(pos[0]),float(pos[1])]
-        self.dx, self.dy =  cos(self.ang) * BULLET_SPEED + d[0], sin(self.ang) * BULLET_SPEED + d[1]
-        self.c = (255,255,255)
-        self.c1 = (0,0,0)
-        self.life = BULLET_LS
-
-    def addMov(self,vec):
-        self.dx += vec[0]
-        self.dy += vec[1]
-
-    def move(self):
-        self.vpos[0] += self.dx
-        self.vpos[1] += self.dy
-        self.actPos()
-        self.life -= 1
-
-    def actPos(self):
-        self.pos = (int(self.vpos[0]),int(self.vpos[1]))
-
-    def draw(self,SF,camPos):
-        pos = (self.pos[0]-camPos[0],self.pos[1]-camPos[1])
-
-        try:
-            pg.gfxdraw.aacircle(SF,pos[0],pos[1],4,self.c)
-        except:
-            pass
-        
         
 
-class Spaceship:
-    def __init__(self,pos):
-        self.pos = pos
-        self.vpos = [float(pos[0]),float(pos[1])]
-        self.dx, self.dy =  0.,0.
-        self.c = (255,255,255)
+class Spaceship(rigidBody):
+    def __init__(self,pos,d = [0.,0.]):
+        rigidBody.__init__(self,pos,d)
+
+        self.c  = (255,255,255)
         self.c1 = (0,0,0)
-        self.ang = 0.
+
         self.bullets = []
         self.fuel = MAX_FUEL_1
 
@@ -216,95 +77,94 @@ class Spaceship:
         self.boosterParticles = ParticleSystem(BOOSTER_COLOR,BOOSTER_COLOR_VAR,BOOSTER_LS,BOOSTER_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
         self.boosterParticles.setDrag(1.0)
         self.rocketParticles.setDrag(DRAG)
-        
+
         self.shootAng = 0.
 
         self.growth = 1.0
 
         self.HP = MAX_HP_1
 
+        self.XP = 0
+
         self.bodySize = int(10*self.growth)
         self.rearSize = int(4*self.growth)
 
     def followMouse(self):
-        self.normalMove(self.shootAng + PI,CM)
+        self.normalMove(self.shootAng,CM)
 
-    def addFuel(self,UI):
+    def addFuel(self):
         self.fuel += FUEL_VALUE
+        if self.fuel > MAX_FUEL_1:
+            self.fuel = MAX_FUEL_1
+
+        self.XP += 20
 
     def boost(self):
         if self.fuel >= 10:
-            x = cos(self.ang + PI) * BOOST_SPEED
-            y = sin(self.ang + PI) * BOOST_SPEED
+            x = cos(self.ang) * BOOST_SPEED
+            y = sin(self.ang ) * BOOST_SPEED
             self.addMov([x,y])
             self.boosterParticles.start(BOOSTER_FLUX,1)
-            self.fuel -= 10
+            self.fuel -= BOOST_COST
 
-    def normalMove(self,angle,speed):
+    def normalMove(self,ang,spd):
         if self.fuel:
-            x = cos(angle) * speed
-            y = sin(angle) * speed
-            vec = [x,y]
-            self.addMov(vec)
+            x = cos(ang) * spd
+            y = sin(ang) * spd
+            self.addMov([x,y])
             self.rocketParticles.start(ROCKET_FLUX)
             self.fuel -= 1
 
-    def addMov(self,vec):
-        self.dx += vec[0]
-        self.dy += vec[1]
-
-        
-
-    def redefAngle(self):
-        dx = self.dx
-        dy = self.dy
-
-        ang = atan2(dy,dx) + PI
-        self.ang = ang
-
-        dx = pg.mouse.get_pos()[0] - CNTR[0]
-        dy = pg.mouse.get_pos()[1] - CNTR[1]
-
-        ang = atan2(dy,dx) + PI
-        self.shootAng = ang
+    def actAngle(self):
+        self.ang = atan2(self.d[1],self.d[0])
+        self.shootAng = atan2(pg.mouse.get_pos()[1] - CNTR[1], pg.mouse.get_pos()[0] - CNTR[0])
 
     def coolDown(self):
         if self.coolDownTime > 0 and not self.readyToShoot:
             self.coolDownTime -= 1
-
         else:
             self.readyToShoot = True
-    
+
     def shoot(self):
         if self.readyToShoot:
-            self.bullets.append(Bullet(self.pos,self.shootAng,[self.dx,self.dy]))
+            NB = {}
+            NB['POS'] = [self.pos[0],self.pos[1]]
+            x = cos(self.shootAng) * BULLET_SPEED + self.d[0]
+            y = sin(self.shootAng) * BULLET_SPEED + self.d[1]
+            NB['D'] = [x,y]
+            NB['AGE'] = 0
+            self.bullets.append(NB)
+
             self.readyToShoot = False
             self.coolDownTime = self.levelCoolDown
-    
-    def move(self):
-        self.vpos[0] += self.dx
-        self.vpos[1] += self.dy
-        self.dx *= DRAG
-        self.dy *= DRAG
-        self.actPos()
-        self.redefAngle()
-        for i,bullet in enumerate(self.bullets):
-            bullet.move()
-            if bullet.life  == 0:
+
+    def actuate(self):
+        self.move()
+        self.actAngle()
+        self.actBullets()
+        self.actParticles()
+
+    def actBullets(self):
+        for i,B in enumerate(self.bullets):
+            B['POS'][0] += B['D'][0]
+            B['POS'][1] += B['D'][1]
+            B['POS'][0] = int(B['POS'][0])
+            B['POS'][1] = int(B['POS'][1])
+            B['AGE'] += 1
+
+            if B['AGE'] > BULLET_LS:
                 self.bullets.pop(i)
 
         self.coolDown()
 
-        mang = atan2(self.dy,self.dx)
-        pmx = cos(mang)* 30
-        pmy = sin(mang)* 30
-        self.rocketParticles.actuate(self.pos,[self.dx,self.dy],[pmx,pmy],ROCKET_SPREAD)
-        self.boosterParticles.actuate(self.pos,[self.dx,self.dy],[pmx*2,pmy*2],BOOSTER_SPREAD)
+    def actParticles(self):
+        mang = atan2(self.d[1],self.d[0])
+        pmx = cos(mang)*30
+        pmy = sin(mang)*30
+        self.rocketParticles.actuate(self.pos,self.d,[pmx,pmy],ROCKET_SPREAD)
+        self.boosterParticles.actuate(self.pos,self.d,[pmx,pmy],BOOSTER_SPREAD)
 
-    def actPos(self):
-        self.pos = (int(self.vpos[0]),int(self.vpos[1]))
-
-    def draw(self,SF,camPos):
+    def draw(self, SF, camPos):
         #Particles drawing
         self.rocketParticles.draw(SF,camPos)
         self.boosterParticles.draw(SF,camPos)
@@ -313,8 +173,8 @@ class Spaceship:
         pos = [self.pos[0]-camPos[0],self.pos[1]-camPos[1]]
 
         #Ship Drawing
-        ang1 = self.ang + PI/4.
-        ang2 = self.ang - PI/4.
+        ang1 = self.ang + PI + PI/4.
+        ang2 = self.ang + PI - PI/4.
         
         bodySize = int(10*self.growth)
         rearSize = int(4*self.growth)
@@ -330,17 +190,12 @@ class Spaceship:
         pg.draw.circle(SF,self.c1,pos,bodySize)
         pg.gfxdraw.aacircle(SF,pos[0],pos[1],bodySize,self.c)
 
-        #Gun Drawing
-        Ang = self.shootAng + PI
-        sx, sy = int(cos(Ang)*4 + pos[0]) , int(sin(Ang)*rearSize + pos[1])
-        ex, ey = int(cos(Ang)*8 + pos[0]) , int(sin(Ang)*rearSize*2 + pos[1])
-        pg.draw.aaline(SF,ROCKET_COLOR,(sx,sy),(ex,ey))
         pg.gfxdraw.aacircle(SF,pos[0],pos[1],rearSize,ROCKET_COLOR)
 
-        for bullet in self.bullets:
-            bullet.draw(SF,camPos)
-
-        
+        for B in self.bullets:
+            p = (B['POS'][0] - camPos[0], B['POS'][1] - camPos[1])
+            pg.draw.circle(SF,self.c1,p,4)
+            pg.gfxdraw.aacircle(SF,p[0],p[1],4,self.c)        
 
 
 class Scene:
@@ -360,6 +215,7 @@ class Scene:
         self.previousCell = [0,0]
 
         self.UI = {}
+        self.iUI = []
 
     def addMov(self,vec):
         self.dx += vec[0]
@@ -437,11 +293,12 @@ class Scene:
                         fuel['dy'] += y
 
                     if d <= self.player.bodySize*2:
-                        self.player.addFuel(self.UI['XP'])
+                        self.player.addFuel()
                         self.cellStack[key].pop(i)
     
     def refreshUI(self):
         self.UI['FUEL'].setCount(self.player.fuel)
+        self.UI['XP'].setCount(self.player.XP)
 
     def move(self):
         self.vpos[0] += self.dx
@@ -454,8 +311,11 @@ class Scene:
         self.moveFuelCells()
         self.refreshUI()
 
-    def addUI(self,key,ui):
-        self.UI[key] = ui
+    def addUI(self,key,ui,independant = False):
+        if not independant:
+            self.UI[key] = ui
+        else:
+            self.iUI.append(ui)
     
     def followPlayer(self):
         self.vpos[0] = self.player.vpos[0] - CNTR[0]
@@ -480,6 +340,9 @@ class Scene:
     def drawUI(self,SF):
         for i,key in enumerate(self.UI):
             self.UI[key].draw(SF,UI_POS,i)
+
+        for ui in self.iUI:
+            ui.draw(SF)
 
     def draw(self,SF):
         self.background.draw(SF,self.pos)
