@@ -96,7 +96,6 @@ def handleEvent(WORLD,event,M_MASK):
             
         if event.key == K_SPACE:
             KEY_ON["SPACE"] = True
-            WORLD.player.boost()
 
     if event.type == MOUSEBUTTONDOWN:
         if pg.mouse.get_pressed()[0]:

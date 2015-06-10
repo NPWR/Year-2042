@@ -8,57 +8,6 @@ from rigidBody import *
 import sys
 PI = pi
 
-class Background:
-    def __init__(self,density,depth):
-        self.density = density
-        self.depth = depth
-        self.initPlanes()
-
-    def initPlanes(self):
-        self.planes = []
-        for i in range(self.depth):
-            self.planes.append([])
-            for j in range(self.density*(i+1)):
-                star = (randrange(W),randrange(H))
-                self.planes[i].append(star)
-        self.planes.reverse()
-
-        self.surfaces = []
-        for j,plane in enumerate(self.planes):
-            
-            i = (self.depth-1)-j
-            c = int((255/self.depth) * (self.depth - i))         
-            c = (c,c,c)
-            
-            newSF = pg.Surface((W*2,H*2))
-            smlSF = pg.Surface((W,H))
-            
-            for star in plane:
-                pg.draw.circle(smlSF,c,star,2)
-                pg.gfxdraw.aacircle(smlSF,star[0],star[1],2,c)
-
-            newSF.blit(smlSF,(0,0))
-            newSF.blit(smlSF,(W,0))
-            newSF.blit(smlSF,(0,H))
-            newSF.blit(smlSF,(W,H))
-
-            newSF.set_colorkey((0,0,0),pg.RLEACCEL)
-
-            self.surfaces.append(newSF)
-        self.surfaces.reverse()
-
-    def draw(self,SF,camPos):
-        for i,surface in enumerate(self.surfaces):
-            dmod = (i+1)*(i+1)
-            pos = (int(camPos[0]/dmod),int(camPos[1]/dmod))
-
-            x = pos[0] % W
-            y = pos[1] % H
-            rct = ((x,y),(W,H))
-
-            SF.blit(surface,(0,0),rct)
-        
-
 class Spaceship(rigidBody):
     def __init__(self,pos,d = [0.,0.]):
         rigidBody.__init__(self,pos,d)
@@ -97,6 +46,9 @@ class Spaceship(rigidBody):
         if self.fuel > MAX_FUEL_1:
             self.fuel = MAX_FUEL_1
 
+        if self.fuel < 0:
+            self.fuel = 0
+
         self.XP += 20
 
     def boost(self):
@@ -108,7 +60,7 @@ class Spaceship(rigidBody):
             self.fuel -= BOOST_COST
 
     def normalMove(self,ang,spd):
-        if self.fuel:
+        if self.fuel > 0:
             x = cos(ang) * spd
             y = sin(ang) * spd
             self.addMov([x,y])
@@ -156,6 +108,9 @@ class Spaceship(rigidBody):
                 self.bullets.pop(i)
 
         self.coolDown()
+
+    def levelUp(self,choice):
+        pass
 
     def actParticles(self):
         mang = atan2(self.d[1],self.d[0])
@@ -217,6 +172,44 @@ class Scene:
         self.UI = {}
         self.iUI = []
 
+        self.focus = 'GAME'
+
+    def signal(self,signal):
+        if signal == 'L':
+            self.player.normalMove(PI,CM)
+
+        if signal == 'R':
+            self.player.normalMove(0,CM)
+
+        if signal == 'U':
+            self.player.normalMove(-PI/2.,CM)
+
+        if signal == 'D':
+            self.player.normalMove(PI/2.,CM)
+
+        if signal == 'LCLICK':
+            if self.focus == 'GAME':
+                self.player.shoot()
+            elif self.focus == 'UI':
+                choice = self.iUI[0].upgradeChoice()
+                if choice != None:
+                    self.focus = 'GAME'
+                    self.player.levelUp(choice)
+
+        if signal == 'RCLICK':
+            if self.focus == 'GAME':
+                self.player.followMouse()
+            elif self.focus == 'UI':
+                choice = self.iUI[0].upgradeChoice()
+                if choice != None:
+                    self.focus = 'GAME'
+                    self.player.levelUp(choice)
+                
+
+        if signal == 'SPACE':
+            if self.focus == 'GAME':
+                self.player.boost()
+            
     def addMov(self,vec):
         self.dx += vec[0]
         self.dy += vec[1]
@@ -299,6 +292,9 @@ class Scene:
     def refreshUI(self):
         self.UI['FUEL'].setCount(self.player.fuel)
         self.UI['XP'].setCount(self.player.XP)
+        if self.player.XP == 100:
+            self.iUI[0].appear()
+            self.focus = 'UI'
 
     def move(self):
         self.vpos[0] += self.dx
@@ -464,6 +460,55 @@ class ParticleSystem:
             pos = (int(p["Px"])-cP[0],int(p["Py"])-cP[1])
             pg.draw.circle(SF,p["COLOR"],pos,p["SIZE"])
             
+
+class Background:
+    def __init__(self,density,depth):
+        self.density = density
+        self.depth = depth
+        self.initPlanes()
+
+    def initPlanes(self):
+        self.planes = []
+        for i in range(self.depth):
+            self.planes.append([])
+            for j in range(self.density*(i+1)):
+                star = (randrange(W),randrange(H))
+                self.planes[i].append(star)
+        self.planes.reverse()
+
+        self.surfaces = []
+        for j,plane in enumerate(self.planes):
             
+            i = (self.depth-1)-j
+            c = int((255/self.depth) * (self.depth - i))         
+            c = (c,c,c)
+            
+            newSF = pg.Surface((W*2,H*2))
+            smlSF = pg.Surface((W,H))
+            
+            for star in plane:
+                pg.draw.circle(smlSF,c,star,2)
+                pg.gfxdraw.aacircle(smlSF,star[0],star[1],2,c)
+
+            newSF.blit(smlSF,(0,0))
+            newSF.blit(smlSF,(W,0))
+            newSF.blit(smlSF,(0,H))
+            newSF.blit(smlSF,(W,H))
+
+            newSF.set_colorkey((0,0,0),pg.RLEACCEL)
+
+            self.surfaces.append(newSF)
+        self.surfaces.reverse()
+
+    def draw(self,SF,camPos):
+        for i,surface in enumerate(self.surfaces):
+            dmod = (i+1)*(i+1)
+            pos = (int(camPos[0]/dmod),int(camPos[1]/dmod))
+
+            x = pos[0] % W
+            y = pos[1] % H
+            rct = ((x,y),(W,H))
+
+            SF.blit(surface,(0,0),rct)           
             
         

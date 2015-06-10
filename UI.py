@@ -78,9 +78,13 @@ class UpgradeSelection:
         self.outlineC = UPG_UI_OUTLINE_COLOR
         self.fillC = UPG_UI_FILL_COLOR
 
-        self.clickZones = [((25,75),(150,150)),
-                      ((200,75),(150,150)),
-                      ((375,75),(150,150))]
+        self.rects = [((25,75),(150,150)),
+                     ((200,75),(150,150)),
+                     ((375,75),(150,150))]
+
+        self.clickZones = [((25,75),(175,225)),
+                          ((200,75),(350,225)),
+                          ((375,75),(525,225))]
 
         self.SF = self.initSurface()
 
@@ -91,7 +95,7 @@ class UpgradeSelection:
         SF = pg.Surface((self.W, self.H))
         SF.fill(self.fillC)
         pg.draw.rect(SF, self.outlineC,((0,0),(self.W,self.H)),1)
-        for zone in self.clickZones:
+        for zone in self.rects:
             pg.draw.rect(SF,self.outlineC,zone,1)
 
         tp = (self.W/2 - self.uptxt.get_width()/2, 75/2 - self.uptxt.get_height()/2)
@@ -113,11 +117,16 @@ class UpgradeSelection:
             
 
     def upgradeChoice(self):
-        pos = (pg.mouse.get_pos()[0] - (CNTR[0]+self.W/2), pg.mouse.get_pos()[1] - (CNTR[1]+self.H/2))
+        mpos = pg.mouse.get_pos()
+        pos = (mpos[0] - (W/2 - self.W/2), mpos[1] - (H/2 - self.H/2))
 
+        choice = None
         for i,zone in enumerate(self.clickZones):
             if pos[0] >= zone[0][0] and pos[0] <= zone[1][0] and pos[1] >= zone[0][1] and pos[1] <= zone[1][1]:
-                return i
+                choice = i
+        if choice != None:
+            self.disappear()
+        return choice
 
     def draw(self,SF):
         if self.active:
@@ -138,7 +147,7 @@ class UpgradeSelection:
             
             if self.timer > UPG_UI_ANIM_TIME:
                 ymax = H/2-self.H/2
-                y = int(self.timer*ymax/UPG_UI_ANIM_TIME) + (H/2-self.H/2)
+                y = int((self.timer-UPG_UI_ANIM_TIME)*ymax/UPG_UI_ANIM_TIME) + (H/2-self.H/2)
                 alpha = int((UPG_UI_ANIM_TIME*2 - self.timer)*255/UPG_UI_ANIM_TIME)
                 pos = (W/2 - self.W/2,y)
                 self.SF.set_alpha(alpha)

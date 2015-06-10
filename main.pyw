@@ -14,7 +14,8 @@ LVL_UP = UpgradeSelection(0)
 WORLD.addUI('HP',HP_Bar)
 WORLD.addUI('XP',XP_Bar)
 WORLD.addUI('FUEL',FUEL_Bar)
-WORLD.addUI('LVL_UP',LVL_UP,True)
+WORLD.addUI('',LVL_UP,True)
+
 
 WIN = pg.display.set_mode(WINSIZE,FULLSCREEN)
 
@@ -25,19 +26,19 @@ while 1:
         M_MASK = handleEvent(WORLD,event, M_MASK)
 
     if KEY_ON["DOWN"]:
-        WORLD.player.normalMove(PI/2.,CM)
+        WORLD.signal('D')
     if KEY_ON["UP"]:
-        WORLD.player.normalMove(-PI/2.,CM)
+        WORLD.signal('U')
     if KEY_ON["LEFT"]:
-        WORLD.player.normalMove(PI,CM)
+        WORLD.signal('L')
     if KEY_ON["RIGHT"]:
-        WORLD.player.normalMove(0,CM)
+        WORLD.signal('R')
     if KEY_ON["LCLICK"]:
-        WORLD.player.shoot()
+        WORLD.signal('LCLICK')
     if KEY_ON["SPACE"]:
-        pass
+        WORLD.signal('SPACE')
     if KEY_ON["RCLICK"]:
-        WORLD.player.followMouse()
+        WORLD.signal('RCLICK')
 
     WORLD.player.actuate()
     WORLD.followPlayer()
