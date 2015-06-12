@@ -5,6 +5,7 @@ from pygame import gfxdraw
 from math import *
 from random import randrange
 from rigidBody import *
+from levels import *
 import sys
 PI = pi
 
@@ -18,9 +19,25 @@ class Spaceship(rigidBody):
         self.bullets = []
         self.fuel = MAX_FUEL_1
 
-        self.readyToShoot = True
-        self.levelCoolDown = 10
-        self.coolDownTime = 0
+        self.turretLevel = 0
+        self.hpLevel = 0
+        self.speedLevel = 0
+        self.LEVEL = 0
+
+        self.turretReady = True
+        self.turretCoolDown = TURRET_COOLDOWN[self.turretLevel]
+        self.turretCoolDownTime = 0
+
+        self.boosterReady = True
+        self.boosterCoolDown = 60
+        self.boosterCoolDownTime = 0
+
+        self.HP = HEALTH[self.hpLevel]
+
+        self.XP = 0
+        self.xpToNextLevel = LEVELS_XP[self.LEVEL]
+
+        self.speed = SPEED[self.speedLevel]
 
         self.rocketParticles = ParticleSystem(ROCKET_COLOR,ROCKET_COLOR_VAR,ROCKET_LS,ROCKET_LS_VAR,ROCKET_MINSIZE,ROCKET_MAXSIZE)
         self.boosterParticles = ParticleSystem(BOOSTER_COLOR,BOOSTER_COLOR_VAR,BOOSTER_LS,BOOSTER_LS_VAR,BOOSTER_MINSIZE,BOOSTER_MAXSIZE)
@@ -31,15 +48,36 @@ class Spaceship(rigidBody):
 
         self.growth = 1.0
 
-        self.HP = MAX_HP_1
-
-        self.XP = 0
+        self.upgraded = False
 
         self.bodySize = int(10*self.growth)
         self.rearSize = int(4*self.growth)
 
+    def levelUp(self,upg):
+        self.LEVEL += 1
+        if upg == 'turret':
+            self.turretLevel += 1
+        if upg == 'health':
+            self.hpLevel += 1
+        if upg == 'speed':
+            self.speedLevel += 1
+
+        self.turretReady = True
+        self.turretCoolDown = TURRET_COOLDOWN[self.turretLevel]
+        self.turretCoolDownTime = 0
+
+        self.HP = HEALTH[self.hpLevel]
+
+        self.XP = 0
+        self.xpToNextLevel = LEVELS_XP[self.LEVEL]
+
+        self.speed = SPEED[self.speedLevel]
+
+        self.upgraded = True
+        
     def followMouse(self):
-        self.normalMove(self.shootAng,CM)
+        self.normalMove(self.shootAng)
+        self.upgraded = False
 
     def addFuel(self):
         self.fuel += FUEL_VALUE
@@ -52,15 +90,19 @@ class Spaceship(rigidBody):
         self.XP += 20
 
     def boost(self):
-        if self.fuel >= 10:
+        if self.fuel >= 10 and self.boosterReady:
             x = cos(self.ang) * BOOST_SPEED
             y = sin(self.ang ) * BOOST_SPEED
             self.addMov([x,y])
             self.boosterParticles.start(BOOSTER_FLUX,1)
             self.fuel -= BOOST_COST
 
-    def normalMove(self,ang,spd):
+            self.boosterReady = False
+            self.boosterCoolDownTime = self.boosterCoolDown
+
+    def normalMove(self,ang):
         if self.fuel > 0:
+            spd = self.speed
             x = cos(ang) * spd
             y = sin(ang) * spd
             self.addMov([x,y])
@@ -72,13 +114,18 @@ class Spaceship(rigidBody):
         self.shootAng = atan2(pg.mouse.get_pos()[1] - CNTR[1], pg.mouse.get_pos()[0] - CNTR[0])
 
     def coolDown(self):
-        if self.coolDownTime > 0 and not self.readyToShoot:
-            self.coolDownTime -= 1
+        if self.turretCoolDownTime > 0 and not self.turretReady:
+            self.turretCoolDownTime -= 1
         else:
-            self.readyToShoot = True
+            self.turretReady = True
+
+        if self.boosterCoolDownTime > 0 and not self.boosterReady:
+            self.boosterCoolDownTime -= 1
+        else:
+            self.boosterReady = True
 
     def shoot(self):
-        if self.readyToShoot:
+        if self.turretReady:
             NB = {}
             NB['POS'] = [self.pos[0],self.pos[1]]
             x = cos(self.shootAng) * BULLET_SPEED + self.d[0]
@@ -87,8 +134,8 @@ class Spaceship(rigidBody):
             NB['AGE'] = 0
             self.bullets.append(NB)
 
-            self.readyToShoot = False
-            self.coolDownTime = self.levelCoolDown
+            self.turretReady = False
+            self.turretCoolDownTime = self.turretCoolDown
 
     def actuate(self):
         self.move()
@@ -108,9 +155,6 @@ class Spaceship(rigidBody):
                 self.bullets.pop(i)
 
         self.coolDown()
-
-    def levelUp(self,choice):
-        pass
 
     def actParticles(self):
         mang = atan2(self.d[1],self.d[0])
@@ -176,16 +220,16 @@ class Scene:
 
     def signal(self,signal):
         if signal == 'L':
-            self.player.normalMove(PI,CM)
+            self.player.normalMove(PI)
 
         if signal == 'R':
-            self.player.normalMove(0,CM)
+            self.player.normalMove(0)
 
         if signal == 'U':
-            self.player.normalMove(-PI/2.,CM)
+            self.player.normalMove(-PI/2.)
 
         if signal == 'D':
-            self.player.normalMove(PI/2.,CM)
+            self.player.normalMove(PI/2.)
 
         if signal == 'LCLICK':
             if self.focus == 'GAME':
@@ -194,7 +238,7 @@ class Scene:
                 choice = self.iUI[0].upgradeChoice()
                 if choice != None:
                     self.focus = 'GAME'
-                    self.player.levelUp(choice)
+                    self.player.levelUp(BOX_TO_UPG[choice])
 
         if signal == 'RCLICK':
             if self.focus == 'GAME':
@@ -203,7 +247,7 @@ class Scene:
                 choice = self.iUI[0].upgradeChoice()
                 if choice != None:
                     self.focus = 'GAME'
-                    self.player.levelUp(choice)
+                    self.player.levelUp(BOX_TO_UPG[choice])
                 
 
         if signal == 'SPACE':
@@ -292,9 +336,13 @@ class Scene:
     def refreshUI(self):
         self.UI['FUEL'].setCount(self.player.fuel)
         self.UI['XP'].setCount(self.player.XP)
-        if self.player.XP == 100:
+        if self.player.XP >= self.player.xpToNextLevel and not self.player.upgraded:
+            self.player.XP += 1
             self.iUI[0].appear()
             self.focus = 'UI'
+
+        self.UI['XP'].setMax(LEVELS_XP[self.player.LEVEL])
+        self.UI['HP'].setMax(HEALTH[self.player.hpLevel])
 
     def move(self):
         self.vpos[0] += self.dx

@@ -14,6 +14,10 @@ class ProgressBar:
         self.count = maximum
         self.max = maximum
 
+    def setMax(self,n):
+        self.max = n
+        self.refreshProgress()
+
     def setProgress(self,n):
         self.progress = n
         self.count = int(n*self.max/100.)
