@@ -232,24 +232,28 @@ class Scene:
             self.player.normalMove(PI/2.)
 
         if signal == 'LCLICK':
+            if self.focus == 'UI':
+                choice = self.iUI[0].upgradeChoice()
+                if choice != None:
+                    self.focus = 'GAME'
+                    self.player.levelUp(BOX_TO_UPG[choice])
+                    
+        if signal == 'LCLICKH':
             if self.focus == 'GAME':
                 self.player.shoot()
-            elif self.focus == 'UI':
-                choice = self.iUI[0].upgradeChoice()
-                if choice != None:
-                    self.focus = 'GAME'
-                    self.player.levelUp(BOX_TO_UPG[choice])
+            
 
         if signal == 'RCLICK':
-            if self.focus == 'GAME':
-                self.player.followMouse()
-            elif self.focus == 'UI':
+            if self.focus == 'UI':
                 choice = self.iUI[0].upgradeChoice()
                 if choice != None:
                     self.focus = 'GAME'
                     self.player.levelUp(BOX_TO_UPG[choice])
-                
 
+        if signal == 'RCLICKH':
+            if self.focus == 'GAME':
+                self.player.followMouse()
+            
         if signal == 'SPACE':
             if self.focus == 'GAME':
                 self.player.boost()

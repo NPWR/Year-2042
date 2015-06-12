@@ -34,11 +34,11 @@ while 1:
     if KEY_ON["RIGHT"]:
         WORLD.signal('R')
     if KEY_ON["LCLICK"]:
-        WORLD.signal('LCLICK')
+        WORLD.signal('LCLICKH')
     if KEY_ON["SPACE"]:
         WORLD.signal('SPACE')
     if KEY_ON["RCLICK"]:
-        WORLD.signal('RCLICK')
+        WORLD.signal('RCLICKH')
 
     WORLD.player.actuate()
     WORLD.followPlayer()

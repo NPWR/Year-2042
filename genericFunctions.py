@@ -100,8 +100,10 @@ def handleEvent(WORLD,event,M_MASK):
     if event.type == MOUSEBUTTONDOWN:
         if pg.mouse.get_pressed()[0]:
             KEY_ON["LCLICK"] = True
+            WORLD.signal('LCLICK')
         if pg.mouse.get_pressed()[2]:
             KEY_ON["RCLICK"] = True
+            WORLD.signal('RCLICK')
     
     else:
         if D_MASK & M_R:
