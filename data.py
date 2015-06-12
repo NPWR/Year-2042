@@ -340,8 +340,8 @@ class Scene:
     def refreshUI(self):
         self.UI['FUEL'].setCount(self.player.fuel)
         self.UI['XP'].setCount(self.player.XP)
-        if self.player.XP >= self.player.xpToNextLevel and not self.player.upgraded:
-            self.player.XP += 1
+        if self.player.XP >= self.player.xpToNextLevel:
+            self.player.XP = 0
             self.iUI[0].appear()
             self.focus = 'UI'
 
